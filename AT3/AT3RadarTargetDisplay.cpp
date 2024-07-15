@@ -3,16 +3,15 @@
 #include "Constant.hpp"
 #include "EuroScopePlugIn.h"
 #include "AT3RadarTargetDisplay.hpp"
+#include <gdiplus.h>
 
 using namespace Gdiplus;
 using namespace EuroScopePlugIn;
 
-AT3RadarTargetDisplay::AT3RadarTargetDisplay(int _CJSLabelSize, int _CJSLabelOffset, bool _CJSLabelShowWhenTracked, double _PlaneIconScale, COLORREF colorA, COLORREF colorNA, COLORREF colorR) :
+AT3RadarTargetDisplay::AT3RadarTargetDisplay(int _CJSLabelSize, int _CJSLabelOffset, bool _CJSLabelShowWhenTracked, double _PlaneIconScale) :
 	CJSLabelSize(_CJSLabelSize), CJSLabelOffset(_CJSLabelOffset), CJSLabelShowWhenTracked(_CJSLabelShowWhenTracked), PlaneIconScale(_PlaneIconScale)
 {
-	colorAssumed.SetFromCOLORREF(colorA);
-	colorNotAssumed.SetFromCOLORREF(colorNA);
-	colorRedundant.SetFromCOLORREF(colorR);
+
 }
 
 void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
@@ -76,19 +75,19 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		GraphicsContainer gContainer = g.BeginContainer();
 
 		// Set brush color based on state
-		SolidBrush aircraftBrush(colorNotAssumed);
-		dc.SetTextColor(colorNotAssumed.ToCOLORREF());
+		SolidBrush aircraftBrush(DEFAULT_UNCONCERNED);
+		dc.SetTextColor(DEFAULT_UNCONCERNED.ToCOLORREF());
 		if (fp.GetState() == FLIGHT_PLAN_STATE_ASSUMED) {
-			aircraftBrush.SetColor(colorAssumed);
-			dc.SetTextColor(colorAssumed.ToCOLORREF());
+			aircraftBrush.SetColor(DEFAULT_ASSUMED);
+			dc.SetTextColor(DEFAULT_ASSUMED.ToCOLORREF());
 		}
 		else if (fp.GetState() == FLIGHT_PLAN_STATE_TRANSFER_FROM_ME_INITIATED) {
-			aircraftBrush.SetColor(colorAssumed);
-			dc.SetTextColor(colorRedundant.ToCOLORREF());
+			aircraftBrush.SetColor(DEFAULT_ASSUMED);
+			dc.SetTextColor(DEFAULT_REDUNDANT.ToCOLORREF());
 		}
 		else if (fp.GetState() == FLIGHT_PLAN_STATE_REDUNDANT || fp.GetState() == FLIGHT_PLAN_STATE_TRANSFER_TO_ME_INITIATED) {
-			aircraftBrush.SetColor(colorRedundant);
-			dc.SetTextColor(colorRedundant.ToCOLORREF());
+			aircraftBrush.SetColor(DEFAULT_REDUNDANT);
+			dc.SetTextColor(DEFAULT_REDUNDANT.ToCOLORREF());
 		}
 
 		// Override aircraft color conditions
@@ -155,7 +154,6 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		if (fp.GetState() == FLIGHT_PLAN_STATE_TRANSFER_FROM_ME_INITIATED) {
 			if (CJSLabelShowFreq[fp.GetCallsign()]) {
 				CJSLabelText = GetControllerFreqFromId(fp.GetHandoffTargetControllerId());
-				dc.SetTextColor(colorAssumed.ToCOLORREF());
 			}
 			else {
 				CJSLabelText = fp.GetHandoffTargetControllerId();
@@ -163,7 +161,6 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		} else if (fp.GetState() == FLIGHT_PLAN_STATE_ASSUMED) {
 			if (CJSLabelShowFreq[fp.GetCallsign()]) {
 				CJSLabelText = GetControllerFreqFromId(GetControllerIdFromCallsign(fp.GetCoordinatedNextController()));
-				dc.SetTextColor(colorAssumed.ToCOLORREF());
 			}
 			else {
 				CJSLabelText = GetControllerIdFromCallsign(fp.GetCoordinatedNextController());
@@ -171,16 +168,8 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		} else {
 			if (CJSLabelShowFreq[fp.GetCallsign()]) {
 				CJSLabelText = GetControllerFreqFromId(fp.GetTrackingControllerId());
-				dc.SetTextColor(colorAssumed.ToCOLORREF());
 			} else {
 				CJSLabelText = fp.GetTrackingControllerId();
-			}
-		}
-
-		// Remove trailing up to two trailing zeroes
-		for (int i = 0; i < 2; i++) {
-			if (CJSLabelText.back() == '0') {
-				CJSLabelText.pop_back();
 			}
 		}
 		dc.TextOutA(acftLocation.x, acftLocation.y - CJSLabelOffset, CJSLabelText.c_str());

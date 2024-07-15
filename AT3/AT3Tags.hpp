@@ -21,7 +21,7 @@ class AT3Tags :
 
 {
 public:
-	AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR);
+	AT3Tags();
 
 	virtual void OnGetTagItem(CFlightPlan FlightPlan,
 		CRadarTarget RadarTarget,
@@ -91,8 +91,4 @@ protected:
 	json appsJson;
 	json rteJson;
 	set<string> arptSet;
-
-	COLORREF colorAssumed;
-	COLORREF colorNotAssumed;
-	COLORREF colorRedundant;
 };

@@ -321,7 +321,7 @@ void MissedApproachAlarm::drawIndicatorUnit(HDC hDC, HKCPDisplay* Display) {
 				if (actButtonHold <= 0) actButtonHold = 0;
 				CRect buttonActPartial(indicatorWindowRect.left + 170, indicatorWindowRect.top + 60 + actButtonHold, indicatorWindowRect.left + 245, indicatorWindowRect.top + 110);
 				dc.FillSolidRect(buttonActPartial, BUTTON_ORANGE_ON);
-				Display->RequestRefresh();
+				RequestRefresh();
 			}
 			actButtonState = 0;
 		}
@@ -362,11 +362,10 @@ void MissedApproachAlarm::drawIndicatorUnit(HDC hDC, HKCPDisplay* Display) {
 	else {
 		dc.FillSolidRect(buttonReset, BUTTON_RED_ON);
 		//Check for acknowledgement
-		const char* ackStationBuf = ma.checkForAck(selectedAcftData[0].c_str());
-		if (!selectedAcftData.empty() && ackStationBuf != NULL) {
+		if (!selectedAcftData.empty() && ma.checkForAck(selectedAcftData[0].c_str()) != NULL) {
 			actButtonState = 2;
 			resetButtonState = 1;
-			ackStation = ackStationBuf;
+			ackStation = ma.checkForAck(selectedAcftData[0].c_str());
 		}
 	}
 	dc.SelectObject(&fontLabelSmall);
@@ -462,10 +461,9 @@ void MissedApproachAlarm::OnFlightPlanControllerAssignedDataUpdate(CFlightPlan F
 	MissedApproachPlugin ma;
 	CFlightPlanData data = FlightPlan.GetFlightPlanData();
 	CFlightPlanControllerAssignedData controllerData = FlightPlan.GetControllerAssignedData();
-	string scratchPadString = controllerData.GetScratchPadString();
 
 	//Filter from scratchpad message
-	if (scratchPadString.find("MISAP_") == string::npos) return;
+	if (strstr(controllerData.GetScratchPadString(), "\\MISS") == NULL) return;
 
 	//Handle tower case first
 	if (!selectedAcftData.empty()) {
@@ -478,9 +476,7 @@ void MissedApproachAlarm::OnFlightPlanControllerAssignedDataUpdate(CFlightPlan F
 	//Don't add to vector unless runway is selected and active
 	if (find(activeMAPPRunways.begin(), activeMAPPRunways.end(), data.GetArrivalRwy()) == activeMAPPRunways.end()) return;
 
-	scratchPadString.erase(0, strlen("MISAP_"));
-	controllerData.SetScratchPadString(scratchPadString.c_str());
-;	missedAcftData.push_back(FlightPlan.GetCallsign());
+	missedAcftData.push_back(FlightPlan.GetCallsign());
 	missedAcftData.push_back(data.GetDestination());
 	missedAcftData.push_back(data.GetArrivalRwy());
 }

@@ -40,7 +40,7 @@ void MissedApproachPlugin::initMissedApproach(const char* callsign) {
 	data = fpl.GetFlightPlanData();
 	controllerData = fpl.GetControllerAssignedData();
 	string buf = controllerData.GetScratchPadString();
-	buf.insert(0, "MISAP_");
+	buf.append("\\MISS");
 	controllerData.SetScratchPadString(buf.c_str());
 }
 
@@ -53,9 +53,11 @@ void MissedApproachPlugin::ackMissedApproach(const char* callsign) {
 	controllerData = fpl.GetControllerAssignedData();
 
 	string buf = controllerData.GetScratchPadString();
-	buf.append("MISAP-ACK_");
-	buf.append(myself.GetPositionId());
-	controllerData.SetScratchPadString(buf.c_str());
+	if (buf.find("\\MISS") != string::npos) {
+		buf.append("\\ACK\\");
+		buf.append(myself.GetPositionId());
+		controllerData.SetScratchPadString(buf.c_str());
+	}
 	//couldn't find it, handle error
 }
 
@@ -67,15 +69,15 @@ void MissedApproachPlugin::resetMissedApproach(const char* callsign) {
 	controllerData = fpl.GetControllerAssignedData();
 	string buf = controllerData.GetScratchPadString();
 	size_t index;
-	string miss = "MISAP_";
-	string ack = "ACK_";
+	string miss = "\\MISS";
+	string ack = "\\ACK";
 	index = buf.find(miss);
 	if (index != string::npos) {
 		buf.erase(index, miss.length());
 	}
 	index = buf.find(ack);
 	if (index != string::npos) {
-		buf.erase(index, ack.length()+3);
+		buf.erase(index, ack.length()+4);
 	}
 	controllerData.SetScratchPadString(buf.c_str());
 	//couldn't find it, handle error
@@ -119,13 +121,10 @@ bool MissedApproachPlugin::matchArrivalAirport(const char* arrivalArpt) {
 
 const char* MissedApproachPlugin::checkForAck(const char* callsign) {
 	CFlightPlanControllerAssignedData controllerData = FlightPlanSelect(callsign).GetControllerAssignedData();
-	const char* ptr = strstr(controllerData.GetScratchPadString(), "MISAP-ACK_");
+	const char* ptr = strstr(controllerData.GetScratchPadString(), "\\MISS\\ACK\\");
 	if (ptr != NULL) {
-		string scratchPadString = ptr;
-		ptr = ptr + strlen("MISAP-ACK_");
-		scratchPadString.erase(0, strlen("MISAP-ACK_AP"));
-		controllerData.SetScratchPadString(scratchPadString.c_str());
-		return (ptr != NULL && strlen(ptr) == 2) ? ptr : "??";
+		ptr = ptr + strlen("\\MISS\\ACK\\");
+		return (ptr != NULL && strlen(ptr) == 3) ? ptr : "???";
 	}
 	return NULL;
 }
