@@ -9,11 +9,13 @@
 #include "MissedApproach/MissedApproachAlarm.hpp"
 #include "MissedApproach/MissedApproachPlugin.hpp"
 #include "AT3/AT3Tags.hpp"
+#include "socket.hpp"
 
 HKCPPlugin* gpMyPlugin = NULL;
 CVFPCPlugin* VFPC = NULL;
 MissedApproachPlugin* Mapp = NULL;
 AT3Tags* tags = NULL;
+TcpServer* g_server = NULL;
 
 void    __declspec (dllexport)    EuroScopePlugInInit(EuroScopePlugIn::CPlugIn** ppPlugInInstance)
 {
@@ -29,12 +31,19 @@ HKCPPlugin::HKCPPlugin() : CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, MY_PLUGI
 	VFPC = new CVFPCPlugin();
 	Mapp = new MissedApproachPlugin();
 	tags = new AT3Tags(colorAssumed, colorNotAssumed, colorRedundant);
+	g_server = new TcpServer(9000);
+	g_server->start();
 }
 
 HKCPPlugin::~HKCPPlugin() {
 	delete VFPC;
 	delete Mapp;
 	delete tags;
+	if (g_server) {
+		g_server->stop();
+		delete g_server;
+		g_server = nullptr;
+	}
 }
 
 COLORREF HKCPPlugin::GetTopSkyColorSettings(string settingName, COLORREF defaultColor)
