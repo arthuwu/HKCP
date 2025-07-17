@@ -150,10 +150,7 @@ void AT3Tags::SetRte(int index, CFlightPlan FlightPlan, vector<string> rteVec, s
 				fpRoute = fpRoute + starStr;
 				CFlightPlanData flightplan_data = FlightPlan.GetFlightPlanData();
 				flightplan_data.SetRoute(fpRoute.c_str()); //assign STAR if not already assigned
-				if (flightplan_data.IsAmended())
-				{
-					flightplan_data.AmendFlightPlan();
-				}
+				flightplan_data.AmendFlightPlan();
 			}
 		}
 	}
