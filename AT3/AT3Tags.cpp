@@ -211,16 +211,16 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 	switch (ItemCode) {
 		case TAG_ITEM_AT3_ALTITUDE:
 			tagOutput = GetFormattedAltitude(FlightPlan, RadarTarget);
-			break;
+			goto endSwitch;
 		case TAG_ITEM_AT3_TRACK:
 			tagOutput = GetFormattedTrack(FlightPlan, RadarTarget);
-			break;
+			goto endSwitch;
 		case TAG_ITEM_AT3_SPEED:
 			tagOutput = GetFormattedGroundspeed(FlightPlan, RadarTarget);
-			break;
+			goto endSwitch;
 		case TAG_ITEM_AT3_ADSB_CALLSIGN:
 			tagOutput = GetADSBCallsign(FlightPlan, RadarTarget);
-			break;
+			goto endSwitch;
 	}
 
 	if (FlightPlan.IsValid()) {
@@ -269,6 +269,8 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 			tagOutput = "";
 		}
 	}
+
+	endSwitch:;
 
 	// Convert string output to character array
 	strcpy_s(sItemString, 16, tagOutput.substr(0, 15).c_str());
