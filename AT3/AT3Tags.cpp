@@ -171,14 +171,16 @@ void AT3Tags::OnFlightPlanControllerAssignedDataUpdate(CFlightPlan FlightPlan, i
 
 void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize)
 {
-	if (!FlightPlan.IsValid() || !RadarTarget.IsValid()) {
+	if (!RadarTarget.IsValid()) {
 		return;
 	}
 
-	bool isAT3Item = true;
 
 	*pColorCode = TAG_COLOR_RGB_DEFINED;
-	switch (FlightPlan.GetState()) {
+	*pRGB = colorNotAssumed;
+
+	if (FlightPlan.IsValid()) {
+		switch (FlightPlan.GetState()) {
 		case FLIGHT_PLAN_STATE_NON_CONCERNED:
 			*pRGB = colorNotAssumed;
 			break;
@@ -200,25 +202,30 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 		case FLIGHT_PLAN_STATE_REDUNDANT:
 			*pRGB = colorRedundant;
 			break;
+		}
 	}
 	
-	string tagOutput;
+	string tagOutput = "";
 
 	switch (ItemCode) {
 		case TAG_ITEM_AT3_ALTITUDE:
 			tagOutput = GetFormattedAltitude(FlightPlan, RadarTarget);
 			break;
-		case TAG_ITEM_AT3_ALTITUDE_ASSIGNED:
-			tagOutput = GetFormattedAltitudedAssigned(FlightPlan, RadarTarget);
-			break;
 		case TAG_ITEM_AT3_TRACK:
 			tagOutput = GetFormattedTrack(FlightPlan, RadarTarget);
 			break;
-		case TAG_ITEM_AT3_HEADING_ASSIGNED:
-			tagOutput = GetFormattedHeadingAssigned(FlightPlan, RadarTarget);
-			break;
 		case TAG_ITEM_AT3_SPEED:
 			tagOutput = GetFormattedGroundspeed(FlightPlan, RadarTarget);
+			break;
+	}
+
+	if (FlightPlan.IsValid()) {
+		switch (ItemCode) {
+		case TAG_ITEM_AT3_ALTITUDE_ASSIGNED:
+			tagOutput = GetFormattedAltitudedAssigned(FlightPlan, RadarTarget);
+			break;
+		case TAG_ITEM_AT3_HEADING_ASSIGNED:
+			tagOutput = GetFormattedHeadingAssigned(FlightPlan, RadarTarget);
 			break;
 		case TAG_ITEM_AT3_SPEED_ASSIGNED:
 			tagOutput = GetFormattedSpeedAssigned(FlightPlan, RadarTarget);
@@ -256,13 +263,11 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 			break;
 		default:
 			tagOutput = "";
-			isAT3Item = false;
+		}
 	}
 
 	// Convert string output to character array
-	if (isAT3Item) {
-		strcpy_s(sItemString, 16, tagOutput.substr(0, 15).c_str());
-	}
+	strcpy_s(sItemString, 16, tagOutput.substr(0, 15).c_str());
 }
 
 void AT3Tags::OnTimer(int Counter) {
