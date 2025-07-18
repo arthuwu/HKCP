@@ -25,6 +25,7 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 	RegisterTagItemType("AT3 AMC Line 4", TAG_ITEM_AT3_AMC_LINE4);
 	RegisterTagItemType("AT3 ETA", TAG_ITEM_AT3_ETA);
 	RegisterTagItemType("AT3 Callsign", TAG_ITEM_AT3_CALLSIGN);
+	RegisterTagItemType("AT3 ADS-B Callsign", TAG_ITEM_AT3_ADSB_CALLSIGN);
 	RegisterTagItemType("AT3 ATYP + WTC", TAG_ITEM_AT3_ATYPWTC);
 	RegisterTagItemType("AT3 VS Indicator", TAG_ITEM_AT3_VS_INDICATOR);
 	RegisterTagItemType("AT3 Arrival Runway", TAG_ITEM_AT3_ARRIVAL_RWY);
@@ -216,6 +217,9 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 			break;
 		case TAG_ITEM_AT3_SPEED:
 			tagOutput = GetFormattedGroundspeed(FlightPlan, RadarTarget);
+			break;
+		case TAG_ITEM_AT3_ADSB_CALLSIGN:
+			tagOutput = GetADSBCallsign(FlightPlan, RadarTarget);
 			break;
 	}
 
@@ -895,6 +899,11 @@ string AT3Tags::GetCallsign(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
 	} else {
 		return FlightPlan.GetCallsign();
 	}
+}
+
+string AT3Tags::GetADSBCallsign(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+{
+	return RadarTarget.GetCallsign();
 }
 
 string AT3Tags::GetATYPWTC(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)

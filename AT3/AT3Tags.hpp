@@ -82,6 +82,8 @@ public:
 
 	string GetCallsign(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget);
 
+	string GetADSBCallsign(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget);
+
 	string GetATYPWTC(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget);
 
 	string GetVSIndicator(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget);
