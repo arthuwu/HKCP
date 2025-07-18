@@ -218,6 +218,9 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 		case TAG_ITEM_AT3_SPEED:
 			tagOutput = GetFormattedGroundspeed(FlightPlan, RadarTarget);
 			goto endSwitch;
+		case TAG_ITEM_AT3_VS_INDICATOR:
+			tagOutput = GetVSIndicator(FlightPlan, RadarTarget);
+			goto endSwitch;
 		case TAG_ITEM_AT3_ADSB_CALLSIGN:
 			tagOutput = GetADSBCallsign(FlightPlan, RadarTarget);
 			goto endSwitch;
@@ -254,9 +257,6 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 			break;
 		case TAG_ITEM_AT3_ATYPWTC:
 			tagOutput = GetATYPWTC(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_VS_INDICATOR:
-			tagOutput = GetVSIndicator(FlightPlan, RadarTarget);
 			break;
 		case TAG_ITEM_AT3_ARRIVAL_RWY:
 			tagOutput = GetFormattedArrivalRwy(FlightPlan, RadarTarget);
