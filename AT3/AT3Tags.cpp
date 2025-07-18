@@ -176,6 +176,7 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 		return;
 	}
 
+	bool isAT3Item = true;
 
 	*pColorCode = TAG_COLOR_RGB_DEFINED;
 	*pRGB = colorNotAssumed;
@@ -224,59 +225,67 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 		case TAG_ITEM_AT3_ADSB_CALLSIGN:
 			tagOutput = GetADSBCallsign(RadarTarget);
 			break;
+		default:
+			tagOutput = "";
+			isAT3Item = false;
 	}
 
-	if (tagOutput.length() != 0) {
-		strcpy_s(sItemString, 16, tagOutput.substr(0, 15).c_str());
+	if (isAT3Item) {
+		strcpy_s(sItemString, 16, tagOutput.substr(0, 15).c_str()); 
 		return;
 	}
 
 	if (FlightPlan.IsValid()) {
+		isAT3Item = true;
+
 		switch (ItemCode) {
-		case TAG_ITEM_AT3_ALTITUDE_ASSIGNED:
-			tagOutput = GetFormattedAltitudedAssigned(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_HEADING_ASSIGNED:
-			tagOutput = GetFormattedHeadingAssigned(FlightPlan);
-			break;
-		case TAG_ITEM_AT3_SPEED_ASSIGNED:
-			tagOutput = GetFormattedSpeedAssigned(FlightPlan);
-			break;
-		case TAG_ITEM_AT3_ROUTE_CODE:
-			tagOutput = GetRouteCodeLine4(FlightPlan);
-			break;
-		case TAG_ITEM_AT3_APPDEP_LINE4:
-			tagOutput = GetAPPDEPLine4(FlightPlan);
-			break;
-		case TAG_ITEM_AT3_AMC_LINE4:
-			tagOutput = GetAMCLine4(FlightPlan);
-			break;
-		case TAG_ITEM_AT3_ETA:
-			tagOutput = GetFormattedETA(FlightPlan, minu);
-			break;
-		case TAG_ITEM_AT3_DELAY:
-			tagOutput = GetAMANDelay(FlightPlan);
-			break;
-		case TAG_ITEM_AT3_CALLSIGN:
-			tagOutput = GetCallsign(FlightPlan);
-			break;
-		case TAG_ITEM_AT3_ATYPWTC:
-			tagOutput = GetATYPWTC(FlightPlan);
-			break;
-		case TAG_ITEM_AT3_ARRIVAL_RWY:
-			tagOutput = GetFormattedArrivalRwy(FlightPlan);
-			break;
-		case TAG_ITEM_AT3_ALRT:
-			tagOutput = GetALRT(FlightPlan);
-			*pRGB = colorRedundant;
-			break;
-		default:
-			tagOutput = "";
+			case TAG_ITEM_AT3_ALTITUDE_ASSIGNED:
+				tagOutput = GetFormattedAltitudedAssigned(FlightPlan, RadarTarget);
+				break;
+			case TAG_ITEM_AT3_HEADING_ASSIGNED:
+				tagOutput = GetFormattedHeadingAssigned(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_SPEED_ASSIGNED:
+				tagOutput = GetFormattedSpeedAssigned(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ROUTE_CODE:
+				tagOutput = GetRouteCodeLine4(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_APPDEP_LINE4:
+				tagOutput = GetAPPDEPLine4(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_AMC_LINE4:
+				tagOutput = GetAMCLine4(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ETA:
+				tagOutput = GetFormattedETA(FlightPlan, minu);
+				break;
+			case TAG_ITEM_AT3_DELAY:
+				tagOutput = GetAMANDelay(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_CALLSIGN:
+				tagOutput = GetCallsign(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ATYPWTC:
+				tagOutput = GetATYPWTC(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ARRIVAL_RWY:
+				tagOutput = GetFormattedArrivalRwy(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ALRT:
+				tagOutput = GetALRT(FlightPlan);
+				*pRGB = colorRedundant;
+				break;
+			default:
+				tagOutput = "";
+				isAT3Item = false;
 		}
 	}
 
 	// Convert string output to character array
-	strcpy_s(sItemString, 16, tagOutput.substr(0, 15).c_str());
+	if (isAT3Item) {
+		strcpy_s(sItemString, 16, tagOutput.substr(0, 15).c_str());
+	}
 }
 
 void AT3Tags::OnTimer(int Counter) {
