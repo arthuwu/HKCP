@@ -25,6 +25,7 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 	RegisterTagItemType("AT3 AMC Line 4", TAG_ITEM_AT3_AMC_LINE4);
 	RegisterTagItemType("AT3 ETA", TAG_ITEM_AT3_ETA);
 	RegisterTagItemType("AT3 Callsign", TAG_ITEM_AT3_CALLSIGN);
+	RegisterTagItemType("AT3 ADS-B Callsign", TAG_ITEM_AT3_ADSB_CALLSIGN);
 	RegisterTagItemType("AT3 ATYP + WTC", TAG_ITEM_AT3_ATYPWTC);
 	RegisterTagItemType("AT3 VS Indicator", TAG_ITEM_AT3_VS_INDICATOR);
 	RegisterTagItemType("AT3 Arrival Runway", TAG_ITEM_AT3_ARRIVAL_RWY);
@@ -171,14 +172,17 @@ void AT3Tags::OnFlightPlanControllerAssignedDataUpdate(CFlightPlan FlightPlan, i
 
 void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int ItemCode, int TagData, char sItemString[16], int* pColorCode, COLORREF* pRGB, double* pFontSize)
 {
-	if (!FlightPlan.IsValid() || !RadarTarget.IsValid()) {
+	if (!RadarTarget.IsValid()) {
 		return;
 	}
 
 	bool isAT3Item = true;
 
 	*pColorCode = TAG_COLOR_RGB_DEFINED;
-	switch (FlightPlan.GetState()) {
+	*pRGB = colorNotAssumed;
+
+	if (FlightPlan.IsValid()) {
+		switch (FlightPlan.GetState()) {
 		case FLIGHT_PLAN_STATE_NON_CONCERNED:
 			*pRGB = colorNotAssumed;
 			break;
@@ -200,63 +204,82 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 		case FLIGHT_PLAN_STATE_REDUNDANT:
 			*pRGB = colorRedundant;
 			break;
+		}
 	}
 	
-	string tagOutput;
+	string tagOutput = "";
 
 	switch (ItemCode) {
 		case TAG_ITEM_AT3_ALTITUDE:
-			tagOutput = GetFormattedAltitude(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_ALTITUDE_ASSIGNED:
-			tagOutput = GetFormattedAltitudedAssigned(FlightPlan, RadarTarget);
+			tagOutput = GetFormattedAltitude(RadarTarget);
 			break;
 		case TAG_ITEM_AT3_TRACK:
-			tagOutput = GetFormattedTrack(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_HEADING_ASSIGNED:
-			tagOutput = GetFormattedHeadingAssigned(FlightPlan, RadarTarget);
+			tagOutput = GetFormattedTrack(RadarTarget);
 			break;
 		case TAG_ITEM_AT3_SPEED:
-			tagOutput = GetFormattedGroundspeed(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_SPEED_ASSIGNED:
-			tagOutput = GetFormattedSpeedAssigned(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_ROUTE_CODE:
-			tagOutput = GetRouteCodeLine4(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_APPDEP_LINE4:
-			tagOutput = GetAPPDEPLine4(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_AMC_LINE4:
-			tagOutput = GetAMCLine4(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_ETA:
-			tagOutput = GetFormattedETA(FlightPlan, RadarTarget, minu);
-			break;
-		case TAG_ITEM_AT3_DELAY:
-			tagOutput = GetAMANDelay(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_CALLSIGN:
-			tagOutput = GetCallsign(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_ATYPWTC:
-			tagOutput = GetATYPWTC(FlightPlan, RadarTarget);
+			tagOutput = GetFormattedGroundspeed(RadarTarget);
 			break;
 		case TAG_ITEM_AT3_VS_INDICATOR:
-			tagOutput = GetVSIndicator(FlightPlan, RadarTarget);
+			tagOutput = GetVSIndicator(RadarTarget);
 			break;
-		case TAG_ITEM_AT3_ARRIVAL_RWY:
-			tagOutput = GetFormattedArrivalRwy(FlightPlan, RadarTarget);
-			break;
-		case TAG_ITEM_AT3_ALRT:
-			tagOutput = GetALRT(FlightPlan, RadarTarget);
-			*pRGB = colorRedundant;
+		case TAG_ITEM_AT3_ADSB_CALLSIGN:
+			tagOutput = GetADSBCallsign(RadarTarget);
 			break;
 		default:
 			tagOutput = "";
 			isAT3Item = false;
+	}
+
+	if (isAT3Item) {
+		strcpy_s(sItemString, 16, tagOutput.substr(0, 15).c_str()); 
+		return;
+	}
+
+	if (FlightPlan.IsValid()) {
+		isAT3Item = true;
+
+		switch (ItemCode) {
+			case TAG_ITEM_AT3_ALTITUDE_ASSIGNED:
+				tagOutput = GetFormattedAltitudedAssigned(FlightPlan, RadarTarget);
+				break;
+			case TAG_ITEM_AT3_HEADING_ASSIGNED:
+				tagOutput = GetFormattedHeadingAssigned(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_SPEED_ASSIGNED:
+				tagOutput = GetFormattedSpeedAssigned(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ROUTE_CODE:
+				tagOutput = GetRouteCodeLine4(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_APPDEP_LINE4:
+				tagOutput = GetAPPDEPLine4(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_AMC_LINE4:
+				tagOutput = GetAMCLine4(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ETA:
+				tagOutput = GetFormattedETA(FlightPlan, minu);
+				break;
+			case TAG_ITEM_AT3_DELAY:
+				tagOutput = GetAMANDelay(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_CALLSIGN:
+				tagOutput = GetCallsign(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ATYPWTC:
+				tagOutput = GetATYPWTC(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ARRIVAL_RWY:
+				tagOutput = GetFormattedArrivalRwy(FlightPlan);
+				break;
+			case TAG_ITEM_AT3_ALRT:
+				tagOutput = GetALRT(FlightPlan);
+				*pRGB = colorRedundant;
+				break;
+			default:
+				tagOutput = "";
+				isAT3Item = false;
+		}
 	}
 
 	// Convert string output to character array
@@ -495,7 +518,7 @@ void AT3Tags::OnFunctionCall(int FunctionId, const char* sItemString, POINT Pt, 
 	}
 }
 
-string AT3Tags::GetFormattedAltitude(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetFormattedAltitude(CRadarTarget& RadarTarget)
 {
 	int altitude = RadarTarget.GetPosition().GetPressureAltitude();
 	int transAlt = GetTransitionAltitude();
@@ -585,7 +608,7 @@ string AT3Tags::GetFormattedAltitudedAssigned(CFlightPlan& FlightPlan, CRadarTar
 	return formattedAltAssigned;
 }
 
-string AT3Tags::GetFormattedTrack(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetFormattedTrack(CRadarTarget& RadarTarget)
 {
 	string track = to_string(static_cast<int>(trunc(RadarTarget.GetTrackHeading())));
 
@@ -599,7 +622,7 @@ string AT3Tags::GetFormattedTrack(CFlightPlan& FlightPlan, CRadarTarget& RadarTa
 	return track;
 }
 
-string AT3Tags::GetFormattedHeadingAssigned(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetFormattedHeadingAssigned(CFlightPlan& FlightPlan)
 {
 	string headingAssigned = to_string(FlightPlan.GetControllerAssignedData().GetAssignedHeading());
 	if (headingAssigned == "0") {
@@ -613,7 +636,7 @@ string AT3Tags::GetFormattedHeadingAssigned(CFlightPlan& FlightPlan, CRadarTarge
 	return headingAssigned;
 }
 
-string AT3Tags::GetFormattedGroundspeed(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetFormattedGroundspeed(CRadarTarget& RadarTarget)
 {
 	string groundSpeed = to_string((RadarTarget.GetGS() + 5) / 10);
 	if (groundSpeed.length() <= 2) {
@@ -622,7 +645,7 @@ string AT3Tags::GetFormattedGroundspeed(CFlightPlan& FlightPlan, CRadarTarget& R
 	return groundSpeed;
 }
 
-string AT3Tags::GetFormattedSpeedAssigned(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetFormattedSpeedAssigned(CFlightPlan& FlightPlan)
 {
 	string speedAssigned;
 
@@ -675,7 +698,7 @@ void AT3Tags::GetRouteCode(CFlightPlan& FlightPlan) {
 	}
 }
 
-string AT3Tags::GetRouteCodeLine4(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetRouteCodeLine4(CFlightPlan& FlightPlan)
 {
 	string spadCurrent = FlightPlan.GetControllerAssignedData().GetScratchPadString();
 	string flightStrip = FlightPlan.GetControllerAssignedData().GetFlightStripAnnotation(3);
@@ -739,7 +762,7 @@ void AT3Tags::GetAssignedAPP(CFlightPlan& FlightPlan) {
 	}
 }
 
-string AT3Tags::GetAPPDEPLine4(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetAPPDEPLine4(CFlightPlan& FlightPlan)
 {
 	string flightStrip = FlightPlan.GetControllerAssignedData().GetFlightStripAnnotation(2);
 	string lineStr;
@@ -777,7 +800,7 @@ string AT3Tags::GetAPPDEPLine4(CFlightPlan& FlightPlan, CRadarTarget& RadarTarge
 	return lineStr;
 }
 
-string AT3Tags::GetAMCLine4(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetAMCLine4(CFlightPlan& FlightPlan)
 {
 	string flightStrip = FlightPlan.GetControllerAssignedData().GetFlightStripAnnotation(2);
 	string lineStr;
@@ -810,7 +833,7 @@ string AT3Tags::GetAMCLine4(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
 	return lineStr;
 }
 
-string AT3Tags::GetFormattedETA(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget, int minutes)
+string AT3Tags::GetFormattedETA(CFlightPlan& FlightPlan, int minutes)
 {
 	try {
 		string runway = FlightPlan.GetFlightPlanData().GetArrivalRwy();
@@ -867,7 +890,7 @@ string AT3Tags::GetFormattedETA(CFlightPlan& FlightPlan, CRadarTarget& RadarTarg
 	}
 }
 
-string AT3Tags::GetAMANDelay(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget) 
+string AT3Tags::GetAMANDelay(CFlightPlan& FlightPlan) 
 {
 	int delay = trunc(GetCurrentDelay(FlightPlan.GetCallsign()));
 	if (delay == 0) {
@@ -880,7 +903,7 @@ string AT3Tags::GetAMANDelay(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
 	}
 }
 
-string AT3Tags::GetCallsign(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetCallsign(CFlightPlan& FlightPlan)
 {
 	string flightStrip = FlightPlan.GetControllerAssignedData().GetFlightStripAnnotation(5); //find TopSky "/cpdlc/" annotations
 
@@ -892,7 +915,12 @@ string AT3Tags::GetCallsign(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
 	}
 }
 
-string AT3Tags::GetATYPWTC(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetADSBCallsign(CRadarTarget& RadarTarget)
+{
+	return RadarTarget.GetCallsign();
+}
+
+string AT3Tags::GetATYPWTC(CFlightPlan& FlightPlan)
 {
 	string ATYPWTC = "";
 	ATYPWTC += FlightPlan.GetFlightPlanData().GetAircraftFPType();
@@ -900,7 +928,7 @@ string AT3Tags::GetATYPWTC(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
 	return ATYPWTC;
 }
 
-string AT3Tags::GetVSIndicator(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetVSIndicator(CRadarTarget& RadarTarget)
 {
 	string vsIndicator;
 	if (RadarTarget.GetVerticalSpeed() > 200) {
@@ -913,7 +941,7 @@ string AT3Tags::GetVSIndicator(CFlightPlan& FlightPlan, CRadarTarget& RadarTarge
 	return vsIndicator;
 }
 
-string AT3Tags::GetFormattedArrivalRwy(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetFormattedArrivalRwy(CFlightPlan& FlightPlan)
 {
 	if (arptSet.find(FlightPlan.GetFlightPlanData().GetDestination()) != arptSet.end()) {
 		string runway = FlightPlan.GetFlightPlanData().GetArrivalRwy();
@@ -926,7 +954,7 @@ string AT3Tags::GetFormattedArrivalRwy(CFlightPlan& FlightPlan, CRadarTarget& Ra
 	}
 }
 
-string AT3Tags::GetALRT(CFlightPlan& FlightPlan, CRadarTarget& RadarTarget)
+string AT3Tags::GetALRT(CFlightPlan& FlightPlan)
 {
 	// HOW warning
 	if (FlightPlan.GetState() == FLIGHT_PLAN_STATE_TRANSFER_FROM_ME_INITIATED) {
