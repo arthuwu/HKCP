@@ -269,14 +269,29 @@ string CVFPCPlugin::CheckAltitude(int rfl, const json& rules)
 		time_t curr_time;
 		curr_time = time(NULL);
 		tm* tm_gmt = gmtime(&curr_time);
+		bool startTimeGreater = false;
 
 		for (const auto& time : rules["time"]) {
-			if (tm_gmt->tm_hour >= time["start"].get<int>() && tm_gmt->tm_hour <= time["end"].get<int>()) {
+
+			bool withinPeriod;
+			startTimeGreater = time["start"].get<int>() > time["end"].get<int>(); // If start time is greater than end time, set bool to true (to allow time periods which wrap around a day to function correctly e.g. 2300-1159z)
+
+			if (startTimeGreater) {
+				withinPeriod = (tm_gmt->tm_hour >= time["start"].get<int>() ||
+					tm_gmt->tm_hour <= time["end"].get<int>());
+			}
+			else {
+				withinPeriod = (tm_gmt->tm_hour >= time["start"].get<int>() &&
+					tm_gmt->tm_hour <= time["end"].get<int>());
+			}
+			
+			if (withinPeriod) {
 				for (const auto& fl : time["unavailableLevels"]) {
 					if (rfl == stoi(fl.get<string>())) {
 						return "FLR"; // Level is time restricted
 					}
 				}
+				// Loop through available levels
 			}
 		}
 	}
