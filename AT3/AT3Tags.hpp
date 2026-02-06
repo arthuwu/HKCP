@@ -101,6 +101,7 @@ protected:
 	COLORREF colorAssumed;
 	COLORREF colorNotAssumed;
 	COLORREF colorRedundant;
+	COLORREF colorVFR;
 
 private:
 	template <typename Out>

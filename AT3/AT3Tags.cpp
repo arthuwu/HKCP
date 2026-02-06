@@ -38,6 +38,7 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 	colorAssumed = colorA;
 	colorNotAssumed = colorNA;
 	colorRedundant = colorR;
+	colorVFR = RGB(110, 205, 229);
 
 	char DllPathFile[_MAX_PATH];
 
@@ -275,9 +276,15 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 				break;
 			case TAG_ITEM_AT3_CALLSIGN:
 				tagOutput = GetCallsign(FlightPlan);
+				if (string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V") {
+					*pRGB = colorVFR;
+				}
 				break;
 			case TAG_ITEM_AT3_ATYPWTC:
 				tagOutput = GetATYPWTC(FlightPlan);
+				if (string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V") {
+					*pRGB = colorVFR;
+				}
 				break;
 			case TAG_ITEM_AT3_ARRIVAL_RWY:
 				tagOutput = GetFormattedArrivalRwy(FlightPlan);
@@ -934,6 +941,9 @@ string AT3Tags::GetATYPWTC(CFlightPlan& FlightPlan)
 {
 	string ATYPWTC = "";
 	ATYPWTC += FlightPlan.GetFlightPlanData().GetAircraftFPType();
+	if (ATYPWTC.length() < 4) {
+		ATYPWTC.insert(ATYPWTC.length(), 4 - ATYPWTC.length(), ' ');
+	}
 	ATYPWTC += FlightPlan.GetFlightPlanData().GetAircraftWtc();
 	return ATYPWTC;
 }
