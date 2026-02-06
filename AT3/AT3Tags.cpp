@@ -1016,7 +1016,7 @@ string AT3Tags::GetALRT(CFlightPlan& FlightPlan)
 
 string AT3Tags::GetWTG(CFlightPlan& FlightPlan)
 {
-	if (string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VHHH" || string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VMMC") {
+	if (string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VHHH" || string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VMMC" || string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VHHX") {
 		return "";
 	}
 
