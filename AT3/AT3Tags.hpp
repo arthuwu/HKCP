@@ -92,10 +92,14 @@ public:
 
 	string GetALRT(CFlightPlan& FlightPlan);
 
+	string GetWTG(CFlightPlan& FlightPlan);
+
 protected:
 	int minu;
 	json appsJson;
 	json rteJson;
+	json acftJson;
+	unordered_map<string, string> wtgMap;
 	set<string> arptSet;
 
 	COLORREF colorAssumed;

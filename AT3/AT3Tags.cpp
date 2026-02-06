@@ -31,6 +31,7 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 	RegisterTagItemType("AT3 Arrival Runway", TAG_ITEM_AT3_ARRIVAL_RWY);
 	RegisterTagItemType("AT3 AMAN Delay", TAG_ITEM_AT3_DELAY);
 	RegisterTagItemType("AT3 ALRT", TAG_ITEM_AT3_ALRT);
+	RegisterTagItemType("AT3 WTG", TAG_ITEM_AT3_WTG);
 
 	RegisterTagItemFunction("AT3 Approach Selection Menu", TAG_FUNC_APP_SEL_MENU);
 	RegisterTagItemFunction("AT3 Route Selection Menu", TAG_FUNC_RTE_SEL_MENU);
@@ -47,6 +48,8 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 	path.resize(path.size() - strlen("HKCP.dll"));
 	string appPath = path + "HKCPApproaches.json";
 	string rtePath = path + "HKCPRoutes.json";
+	path.resize(path.size() - strlen("HKCP/"));
+	string acftPath = path + "TopSky/ICAO_Aircraft.json";
 
 	try {
 		fstream appsFile(appPath);
@@ -58,6 +61,20 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 		rteJson = json::parse(rteFile);
 		rteFile.close();
 		rteFile.clear();
+
+		fstream acftFile(acftPath);
+		acftJson = json::parse(acftFile);
+		acftFile.close();
+		acftFile.clear();
+
+		for (auto& acft : acftJson) {
+			if (!acft.contains("WTG") || !acft.contains("ICAO"))
+				continue;
+
+			wtgMap[acft["ICAO"]] = acft["WTG"];
+		}
+
+		acftJson = json(); // clear memory?
 
 		for (auto& arpt : appsJson.items()) {
 			arptSet.insert(arpt.key());
@@ -292,6 +309,9 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 			case TAG_ITEM_AT3_ALRT:
 				tagOutput = GetALRT(FlightPlan);
 				*pRGB = colorRedundant;
+				break;
+			case TAG_ITEM_AT3_WTG:
+				tagOutput = GetWTG(FlightPlan);
 				break;
 			default:
 				tagOutput = "";
@@ -992,4 +1012,31 @@ string AT3Tags::GetALRT(CFlightPlan& FlightPlan)
 	}
 
 	return "";
+}
+
+string AT3Tags::GetWTG(CFlightPlan& FlightPlan)
+{
+	if (string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VHHH" || string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VMMC") {
+		return "";
+	}
+
+	unordered_map<string, string> alias;
+	alias["A"] = "J";
+	alias["B"] = "H";
+	alias["C"] = "U";
+	alias["D"] = "M";
+	alias["E"] = "S";
+	alias["F"] = "S";
+	alias["G"] = "L";
+
+	string icao = FlightPlan.GetFlightPlanData().GetAircraftFPType();
+	auto kvp = wtgMap.find(icao);
+	if (kvp != wtgMap.end())
+	{
+		return alias.find(kvp->second)->second;
+	}
+	else
+	{
+		return "";
+	}
 }
