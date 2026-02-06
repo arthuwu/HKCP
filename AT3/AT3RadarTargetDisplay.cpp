@@ -94,7 +94,7 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		// Override aircraft color conditions
 		if (pd.GetPressureAltitude() > 100 && strlen(fp.GetTrackingControllerId()) == 0 &&
 			fp.GetSectorEntryMinutes() <= 1 && fp.GetSectorEntryMinutes() >= 0) {
-			if ((fp.GetDistanceFromOrigin() > 6 && fp.GetDistanceToDestination() > 6) || pd.GetPressureAltitude() > 3000) { //not approaching/departing
+			if ((fp.GetDistanceFromOrigin() > 8 && fp.GetDistanceToDestination() > 8) || pd.GetPressureAltitude() > 3000) { //not approaching/departing
 				aircraftBrush.SetColor(OVERRIDE_AIW);
 			}
 		}
