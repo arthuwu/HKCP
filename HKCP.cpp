@@ -9,7 +9,6 @@
 #include "MissedApproach/MissedApproachAlarm.hpp"
 #include "MissedApproach/MissedApproachPlugin.hpp"
 #include "AT3/AT3Tags.hpp"
-#include "Constant.hpp"
 
 HKCPPlugin* gpMyPlugin = NULL;
 CVFPCPlugin* VFPC = NULL;
