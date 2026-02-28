@@ -12,7 +12,7 @@
 
 using namespace EuroScopePlugIn;
 
-AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, MY_PLUGIN_NAME, MY_PLUGIN_VERSION, MY_PLUGIN_DEVELOPER, MY_PLUGIN_COPYRIGHT)
+AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR, COLORREF colorV) : CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, MY_PLUGIN_NAME, MY_PLUGIN_VERSION, MY_PLUGIN_DEVELOPER, MY_PLUGIN_COPYRIGHT)
 {
 	RegisterTagItemType("AT3 Altitude", TAG_ITEM_AT3_ALTITUDE);
 	RegisterTagItemType("AT3 Assigned Altitude", TAG_ITEM_AT3_ALTITUDE_ASSIGNED);
@@ -39,7 +39,7 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 	colorAssumed = colorA;
 	colorNotAssumed = colorNA;
 	colorRedundant = colorR;
-	colorVFR = RGB(110, 205, 229);
+	colorVFR = colorV;
 
 	char DllPathFile[_MAX_PATH];
 
