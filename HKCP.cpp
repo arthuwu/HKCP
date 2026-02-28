@@ -9,6 +9,7 @@
 #include "MissedApproach/MissedApproachAlarm.hpp"
 #include "MissedApproach/MissedApproachPlugin.hpp"
 #include "AT3/AT3Tags.hpp"
+#include "Constant.hpp"
 
 HKCPPlugin* gpMyPlugin = NULL;
 CVFPCPlugin* VFPC = NULL;
@@ -28,7 +29,7 @@ HKCPPlugin::HKCPPlugin() : CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, MY_PLUGI
 	
 	VFPC = new CVFPCPlugin();
 	Mapp = new MissedApproachPlugin();
-	tags = new AT3Tags(colorAssumed, colorNotAssumed, colorRedundant);
+	tags = new AT3Tags(colorAssumed, colorNotAssumed, colorRedundant, DEFAULT_VFR);
 }
 
 HKCPPlugin::~HKCPPlugin() {
