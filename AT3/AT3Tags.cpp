@@ -63,18 +63,23 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR, COLORREF co
 		rteFile.clear();
 
 		fstream acftFile(acftPath);
-		acftJson = json::parse(acftFile);
-		acftFile.close();
-		acftFile.clear();
-
-		for (auto& acft : acftJson) {
-			if (!acft.contains("WTG") || !acft.contains("ICAO"))
-				continue;
-
-			wtgMap[acft["ICAO"]] = acft["WTG"];
+		if (!acftFile) {
+			DisplayUserMessage("HKCP", "HKCP", "Unable to find TopSky/ICAO_Aircraft.json for WTG data", true, true, false, false, false);
 		}
+		else {
+			json acftJson = json::parse(acftFile);
+			acftFile.close();
+			acftFile.clear();
 
-		acftJson = json(); // clear memory?
+			for (auto& acft : acftJson) {
+				if (!acft.contains("WTG") || !acft.contains("ICAO"))
+					continue;
+
+				wtgMap[acft["ICAO"]] = acft["WTG"];
+			}
+
+			acftJson = json(); // clear memory
+		}
 
 		for (auto& arpt : appsJson.items()) {
 			arptSet.insert(arpt.key());
@@ -1030,13 +1035,13 @@ string AT3Tags::GetWTG(CFlightPlan& FlightPlan)
 	alias["G"] = "L";
 
 	string icao = FlightPlan.GetFlightPlanData().GetAircraftFPType();
-	auto kvp = wtgMap.find(icao);
-	if (kvp != wtgMap.end())
-	{
-		return alias.find(kvp->second)->second;
-	}
-	else
-	{
+	auto mapIt = wtgMap.find(icao);
+	if (mapIt == wtgMap.end())
 		return "";
-	}
+
+	auto aliasIt = alias.find(mapIt->second);
+	if (aliasIt == alias.end())
+		return "";
+
+	return aliasIt->second;
 }
