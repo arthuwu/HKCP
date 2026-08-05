@@ -12,7 +12,7 @@
 
 using namespace EuroScopePlugIn;
 
-AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, MY_PLUGIN_NAME, MY_PLUGIN_VERSION, MY_PLUGIN_DEVELOPER, MY_PLUGIN_COPYRIGHT)
+AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR, COLORREF colorV) : CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, MY_PLUGIN_NAME, MY_PLUGIN_VERSION, MY_PLUGIN_DEVELOPER, MY_PLUGIN_COPYRIGHT)
 {
 	RegisterTagItemType("AT3 Altitude", TAG_ITEM_AT3_ALTITUDE);
 	RegisterTagItemType("AT3 Assigned Altitude", TAG_ITEM_AT3_ALTITUDE_ASSIGNED);
@@ -31,6 +31,7 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 	RegisterTagItemType("AT3 Arrival Runway", TAG_ITEM_AT3_ARRIVAL_RWY);
 	RegisterTagItemType("AT3 AMAN Delay", TAG_ITEM_AT3_DELAY);
 	RegisterTagItemType("AT3 ALRT", TAG_ITEM_AT3_ALRT);
+	RegisterTagItemType("AT3 WTG", TAG_ITEM_AT3_WTG);
 
 	RegisterTagItemFunction("AT3 Approach Selection Menu", TAG_FUNC_APP_SEL_MENU);
 	RegisterTagItemFunction("AT3 Route Selection Menu", TAG_FUNC_RTE_SEL_MENU);
@@ -38,6 +39,7 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 	colorAssumed = colorA;
 	colorNotAssumed = colorNA;
 	colorRedundant = colorR;
+	colorVFR = colorV;
 
 	char DllPathFile[_MAX_PATH];
 
@@ -46,6 +48,8 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 	path.resize(path.size() - strlen("HKCP.dll"));
 	string appPath = path + "HKCPApproaches.json";
 	string rtePath = path + "HKCPRoutes.json";
+	path.resize(path.size() - strlen("HKCP/"));
+	string acftPath = path + "TopSky/ICAO_Aircraft.json";
 
 	try {
 		fstream appsFile(appPath);
@@ -57,6 +61,25 @@ AT3Tags::AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR) : CPlugIn(E
 		rteJson = json::parse(rteFile);
 		rteFile.close();
 		rteFile.clear();
+
+		fstream acftFile(acftPath);
+		if (!acftFile) {
+			DisplayUserMessage("HKCP", "HKCP", "Unable to find TopSky/ICAO_Aircraft.json for WTG data", true, true, false, false, false);
+		}
+		else {
+			json acftJson = json::parse(acftFile);
+			acftFile.close();
+			acftFile.clear();
+
+			for (auto& acft : acftJson) {
+				if (!acft.contains("WTG") || !acft.contains("ICAO"))
+					continue;
+
+				wtgMap[acft["ICAO"]] = acft["WTG"];
+			}
+
+			acftJson = json(); // clear memory
+		}
 
 		for (auto& arpt : appsJson.items()) {
 			arptSet.insert(arpt.key());
@@ -275,9 +298,15 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 				break;
 			case TAG_ITEM_AT3_CALLSIGN:
 				tagOutput = GetCallsign(FlightPlan);
+				if (string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V") {
+					*pRGB = colorVFR;
+				}
 				break;
 			case TAG_ITEM_AT3_ATYPWTC:
 				tagOutput = GetATYPWTC(FlightPlan);
+				if (string(FlightPlan.GetFlightPlanData().GetPlanType()) == "V") {
+					*pRGB = colorVFR;
+				}
 				break;
 			case TAG_ITEM_AT3_ARRIVAL_RWY:
 				tagOutput = GetFormattedArrivalRwy(FlightPlan);
@@ -285,6 +314,9 @@ void AT3Tags::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget, int
 			case TAG_ITEM_AT3_ALRT:
 				tagOutput = GetALRT(FlightPlan);
 				*pRGB = colorRedundant;
+				break;
+			case TAG_ITEM_AT3_WTG:
+				tagOutput = GetWTG(FlightPlan);
 				break;
 			default:
 				tagOutput = "";
@@ -934,6 +966,9 @@ string AT3Tags::GetATYPWTC(CFlightPlan& FlightPlan)
 {
 	string ATYPWTC = "";
 	ATYPWTC += FlightPlan.GetFlightPlanData().GetAircraftFPType();
+	if (ATYPWTC.length() < 4) {
+		ATYPWTC.insert(ATYPWTC.length(), 4 - ATYPWTC.length(), ' ');
+	}
 	ATYPWTC += FlightPlan.GetFlightPlanData().GetAircraftWtc();
 	return ATYPWTC;
 }
@@ -982,4 +1017,31 @@ string AT3Tags::GetALRT(CFlightPlan& FlightPlan)
 	}
 
 	return "";
+}
+
+string AT3Tags::GetWTG(CFlightPlan& FlightPlan)
+{
+	if (string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VHHH" || string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VMMC" || string(FlightPlan.GetFlightPlanData().GetOrigin()) == "VHHX") {
+		return "";
+	}
+
+	unordered_map<string, string> alias;
+	alias["A"] = "J";
+	alias["B"] = "H";
+	alias["C"] = "U";
+	alias["D"] = "M";
+	alias["E"] = "S";
+	alias["F"] = "S";
+	alias["G"] = "L";
+
+	string icao = FlightPlan.GetFlightPlanData().GetAircraftFPType();
+	auto mapIt = wtgMap.find(icao);
+	if (mapIt == wtgMap.end())
+		return "";
+
+	auto aliasIt = alias.find(mapIt->second);
+	if (aliasIt == alias.end())
+		return "";
+
+	return aliasIt->second;
 }
