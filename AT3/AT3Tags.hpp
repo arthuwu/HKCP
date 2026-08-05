@@ -23,7 +23,7 @@ class AT3Tags :
 
 {
 public:
-	AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR);
+	AT3Tags(COLORREF colorA, COLORREF colorNA, COLORREF colorR, COLORREF colorV);
 
 	virtual void OnGetTagItem(CFlightPlan FlightPlan,
 		CRadarTarget RadarTarget,
@@ -92,15 +92,19 @@ public:
 
 	string GetALRT(CFlightPlan& FlightPlan);
 
+	string GetWTG(CFlightPlan& FlightPlan);
+
 protected:
 	int minu;
 	json appsJson;
 	json rteJson;
+	unordered_map<string, string> wtgMap;
 	set<string> arptSet;
 
 	COLORREF colorAssumed;
 	COLORREF colorNotAssumed;
 	COLORREF colorRedundant;
+	COLORREF colorVFR;
 
 private:
 	template <typename Out>

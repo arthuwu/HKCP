@@ -28,7 +28,7 @@ HKCPPlugin::HKCPPlugin() : CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, MY_PLUGI
 	
 	VFPC = new CVFPCPlugin();
 	Mapp = new MissedApproachPlugin();
-	tags = new AT3Tags(colorAssumed, colorNotAssumed, colorRedundant);
+	tags = new AT3Tags(colorAssumed, colorNotAssumed, colorRedundant, DEFAULT_VFR);
 }
 
 HKCPPlugin::~HKCPPlugin() {
