@@ -109,26 +109,26 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		g.RotateTransform(acft.GetPosition().GetReportedHeadingTrueNorth());
 
 		// Set Anti-aliasing
-		g.SetSmoothingMode(SmoothingModeAntiAlias);
+		// g.SetSmoothingMode(SmoothingModeAntiAlias);
 
-		// Define aircraft icon
+		// Define aircraft icon //NEW ICON FOR TESTING - REMOVE BEFORE PR
 		Point aircraftIcon[19] = {
 			Point(0,-7),
 			Point(-1,-6),
 			Point(-1,-2),
+			Point(-7,1),
 			Point(-7,3),
-			Point(-7,4),
-			Point(-1,2),
-			Point(-1,6),
-			Point(-4,8),
-			Point(-4,9),
-			Point(0,8),
-			Point(4,9),
-			Point(4,8),
-			Point(1,6),
-			Point(1,2),
-			Point(7,4),
+			Point(-1,1),
+			Point(-1,4),
+			Point(-4,5),
+			Point(-4,7),
+			Point(0,6),
+			Point(4,7),
+			Point(4,5),
+			Point(1,4),
+			Point(1,1),
 			Point(7,3),
+			Point(7,1),
 			Point(1,-2),
 			Point(1,-6),
 			Point(0,-7)
@@ -196,6 +196,33 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		// Increment to next aircraft
 		acft = GetPlugIn()->RadarTargetSelectNext(acft);
 	}
+
+	// Draw ASEL highlight box
+	CRadarTarget aselRt = GetPlugIn()->RadarTargetSelectASEL();
+	if (aselRt.IsValid()) {
+		CPosition aselPos = aselRt.GetPosition().GetPosition();
+
+		GraphicsContainer gContainer = g.BeginContainer();
+		Pen aselPen(colorAssumed);
+
+		POINT aselLocation = Display->ConvertCoordFromPositionToPixel(aselPos);
+		g.ScaleTransform(PlaneIconScale, PlaneIconScale, MatrixOrderAppend);
+		g.TranslateTransform(aselLocation.x, aselLocation.y, MatrixOrderAppend);
+
+		Point aselIcon[4] = {
+			Point(14, 14),
+			Point(14, -14),
+			Point(-14, -14),
+			Point(-14, 14),
+		};
+
+		// Draw the aircraft icon
+		g.DrawPolygon(&aselPen, aselIcon, 4);
+
+		// Cleanup
+		g.EndContainer(gContainer);
+		DeleteObject(&aselIcon);
+	};
 
 	// Restore context
 	dc.RestoreDC(sDC);
