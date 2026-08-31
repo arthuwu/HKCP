@@ -78,7 +78,7 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		// Set brush color based on state
 		SolidBrush aircraftBrush(colorNotAssumed);
 		dc.SetTextColor(colorNotAssumed.ToCOLORREF());
-		if (fp.GetState() == FLIGHT_PLAN_STATE_ASSUMED) {
+		if (fp.GetState() == FLIGHT_PLAN_STATE_ASSUMED || fp.GetState() == FLIGHT_PLAN_STATE_TRANSFER_TO_ME_INITIATED) {
 			aircraftBrush.SetColor(colorAssumed);
 			dc.SetTextColor(colorAssumed.ToCOLORREF());
 		}
@@ -86,7 +86,7 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 			aircraftBrush.SetColor(colorAssumed);
 			dc.SetTextColor(colorRedundant.ToCOLORREF());
 		}
-		else if (fp.GetState() == FLIGHT_PLAN_STATE_REDUNDANT || fp.GetState() == FLIGHT_PLAN_STATE_TRANSFER_TO_ME_INITIATED) {
+		else if (fp.GetState() == FLIGHT_PLAN_STATE_REDUNDANT) {
 			aircraftBrush.SetColor(colorRedundant);
 			dc.SetTextColor(colorRedundant.ToCOLORREF());
 		}
