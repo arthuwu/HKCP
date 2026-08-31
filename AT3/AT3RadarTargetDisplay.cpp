@@ -197,6 +197,33 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		acft = GetPlugIn()->RadarTargetSelectNext(acft);
 	}
 
+	// Draw ASEL highlight box
+	CRadarTarget aselRt = GetPlugIn()->RadarTargetSelectASEL();
+	if (aselRt.IsValid()) {
+		CPosition aselPos = aselRt.GetPosition().GetPosition();
+
+		GraphicsContainer gContainer = g.BeginContainer();
+		Pen aselPen(colorAssumed);
+
+		POINT aselLocation = Display->ConvertCoordFromPositionToPixel(aselPos);
+		g.ScaleTransform(PlaneIconScale, PlaneIconScale, MatrixOrderAppend);
+		g.TranslateTransform(aselLocation.x, aselLocation.y, MatrixOrderAppend);
+
+		Point aselIcon[4] = {
+			Point(14, 14),
+			Point(14, -14),
+			Point(-14, -14),
+			Point(-14, 14),
+		};
+
+		// Draw the aircraft icon
+		g.DrawPolygon(&aselPen, aselIcon, 4);
+
+		// Cleanup
+		g.EndContainer(gContainer);
+		DeleteObject(&aselIcon);
+	};
+
 	// Restore context
 	dc.RestoreDC(sDC);
 
