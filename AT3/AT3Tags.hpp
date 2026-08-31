@@ -100,6 +100,8 @@ public:
 
 	string GetWTG(CFlightPlan& FlightPlan);
 
+	string GetTSSR(CRadarTarget& RadarTarget);
+
 protected:
 	int minu;
 	json appsJson;
