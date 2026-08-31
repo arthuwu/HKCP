@@ -203,7 +203,14 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		CPosition aselPos = aselRt.GetPosition().GetPosition();
 
 		GraphicsContainer gContainer = g.BeginContainer();
-		Pen aselPen(colorAssumed);
+		Pen aselPen(colorNotAssumed);
+
+		CFlightPlan aselFp = aselRt.GetCorrelatedFlightPlan();
+		if (aselFp.IsValid()) {
+			if (aselFp.GetState() == FLIGHT_PLAN_STATE_ASSUMED || aselFp.GetState() == FLIGHT_PLAN_STATE_TRANSFER_TO_ME_INITIATED) {
+				aselPen.SetColor(colorAssumed);
+			}
+		}
 
 		POINT aselLocation = Display->ConvertCoordFromPositionToPixel(aselPos);
 		g.ScaleTransform(PlaneIconScale, PlaneIconScale, MatrixOrderAppend);
