@@ -252,7 +252,7 @@ void AT3RadarTargetDisplay::OnRefresh(HDC hDC, int Phase, HKCPDisplay* Display)
 		acft = GetPlugIn()->RadarTargetSelectNext(acft);
 	}
   
-  g.Restore(gState);
+	g.Restore(gState);
   
 	// Draw ASEL highlight box
 	CRadarTarget aselRt = GetPlugIn()->RadarTargetSelectASEL();
