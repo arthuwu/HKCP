@@ -6,6 +6,7 @@
 #include <string>
 #include <set>
 #include <iostream>
+#include <unordered_map>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include "MAESTROapi.h"
@@ -101,6 +102,8 @@ public:
 	string GetWTG(CFlightPlan& FlightPlan);
 
 	string GetTSSR(CRadarTarget& RadarTarget);
+  
+	static unordered_map<string, bool> showRouteDraw;
 
 protected:
 	int minu;
@@ -108,11 +111,13 @@ protected:
 	json rteJson;
 	unordered_map<string, string> wtgMap;
 	set<string> arptSet;
+	unordered_map<string, int> callsignToHandoffTimer;
 
 	COLORREF colorAssumed;
 	COLORREF colorNotAssumed;
 	COLORREF colorRedundant;
 	COLORREF colorVFR;
+	static const int HOW_WARNING_TIME = 30;
 
 private:
 	template <typename Out>
